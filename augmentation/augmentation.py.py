@@ -81,7 +81,7 @@ def augment_raw_audio(sample, sample_rate):
         return sample
 
 
-def augment_raw(sample, sample_rate, augmentation_method): #添加了augmentation_method参数，包括nlpaug,audiomentations,librosa
+def augment_raw(sample, sample_rate, augmentation_method):
     """
     Raw audio data augmentation technique
     """
@@ -89,16 +89,16 @@ def augment_raw(sample, sample_rate, augmentation_method): #添加了augmentatio
     if augmentation_method == "nlpaug":
         """ 1) nlpaug """
         augment_list = [
-            # naa.CropAug(sampling_rate=sample_rate) #裁剪
-            #naa.NoiseAug(), # apply noise injection operation 噪声注入
-            #naa.SpeedAug(), # apply speed adjustment operation 速度调整
-            naa.LoudnessAug(factor=(0.5, 2)), # apply adjusting loudness operation 调整音量响度
-            naa.VtlpAug(sampling_rate=sample_rate, zone=(0.0, 1.0)), # apply vocal tract length perturbation (VTLP) operation 声道长度扰动
-            naa.PitchAug(sampling_rate=sample_rate, factor=(-1,3)) # apply pitch adjustment operation 音高调整
+            # naa.CropAug(sampling_rate=sample_rate) 
+            #naa.NoiseAug(), # apply noise injection operation 
+            #naa.SpeedAug(), # apply speed adjustment operation 
+            naa.LoudnessAug(factor=(0.5, 2)), # apply adjusting loudness operation 
+            naa.VtlpAug(sampling_rate=sample_rate, zone=(0.0, 1.0)), # apply vocal tract length perturbation (VTLP) operation 
+            naa.PitchAug(sampling_rate=sample_rate, factor=(-1,3)) # apply pitch adjustment operation
         ]
 
         # randomly sample augmentation
-        aug_idx = random.randint(0, len(augment_list)-1) #随机选择一个上面的增强方法
+        aug_idx = random.randint(0, len(augment_list)-1) 
         sample = augment_list[aug_idx].augment(sample)
      
     
@@ -108,10 +108,10 @@ def augment_raw(sample, sample_rate, augmentation_method): #添加了augmentatio
         from audiomentations import AddGaussianSNR, TimeStretch, PitchShift, Shift
 
         audio_transforms = audiomentations.Compose([
-            AddGaussianSNR(min_snr_in_db=5, max_snr_in_db=40.0, p=0.5), #添加高斯噪声
-            TimeStretch(min_rate=0.8, max_rate=1.25, p=0.5), #时间拉伸
-            PitchShift(min_semitones=-4, max_semitones=4, p=0.5), #音高变化
-            Shift(min_shift=-0.5, max_shift=0.5, p=0.5), #移位
+            AddGaussianSNR(min_snr_in_db=5, max_snr_in_db=40.0, p=0.5), 
+            TimeStretch(min_rate=0.8, max_rate=1.25, p=0.5), 
+            PitchShift(min_semitones=-4, max_semitones=4, p=0.5), 
+            Shift(min_shift=-0.5, max_shift=0.5, p=0.5), 
         ])
 
         sample = audio_transforms(samples=sample.astype(np.float32), sample_rate=sample_rate)
@@ -121,19 +121,19 @@ def augment_raw(sample, sample_rate, augmentation_method): #添加了augmentatio
         """ 3) librosa """
         import librosa
 
-        def _noise(data): # 噪声注入
+        def _noise(data): 
             noise_amp = 0.035 * np.random.uniform() * np.amax(data)
             data = data + noise_amp * np.random.normal(size=data.shape[0])
             return data
 
-        def _stretch(data, rate=0.8): # 时间拉伸
+        def _stretch(data, rate=0.8): 
             return librosa.effects.time_stretch(y=data, rate=rate)
 
-        def _shift(data): # 移位
+        def _shift(data): 
             shift_range = int(np.random.uniform(low=-5, high=5) * 1000)
             return np.roll(data, shift_range)
             
-        def _pitch(data, sampling_rate, pitch_factor=0.7): # 音高变化
+        def _pitch(data, sampling_rate, pitch_factor=0.7): 
             return librosa.effects.pitch_shift(y=data, sr=sampling_rate, n_steps=pitch_factor)
 
         sample = _noise(sample)
@@ -209,13 +209,12 @@ class SpecAugment(torch.nn.Module):
         elif self.policy == 'SPRS_enhanced':
             self.W, self.F, self.m_F, self.T, self.p, self.m_T = 40, 16, 1, 40, 1.0, 1
         
-        # W：Time Warp parameter（时间扭曲参数）。
-        # F：Frequency Mask parameter（频率掩蔽参数）。
-        # m_F：Number of Frequency masks（频率掩蔽的数量）。
-        # T：Time Mask parameter（时间掩蔽参数）。
-        # p：Parameter for calculating upper bound for time mask（计算时间掩蔽上界的参数）。
-        # m_T：Number of time masks（时间掩蔽的数量）
-
+        # W：Time Warp parameter
+        # F：Frequency Mask parameter
+        # m_F：Number of Frequency masks
+        # T：Time Mask parameter
+        # p：Parameter for calculating upper bound for time mask
+        # m_T：Number of time masks
         # mimic SpecAugment by using torchaudio.transforms
         # self.spec_aug = torch.nn.Sequential(
         #     T.TimeStretch(0.8, fixed_rate=True),
